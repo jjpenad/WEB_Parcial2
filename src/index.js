@@ -2,11 +2,25 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
+import { IntlProvider } from "react-intl";
 //import reportWebVitals from "./reportWebVitals";
+
+import localEsMessages from "./locales/es.json";
+import localEnMessages from "./locales/en.json";
+
+const language = window.navigator.language || navigator.browserLanguage;
+
+const lang = language.substring(0, 2);
+
+console.log(lang);
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <IntlProvider
+      locale={lang}
+      messages={lang === "es" ? localEsMessages : localEnMessages}>
+      <App />
+    </IntlProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

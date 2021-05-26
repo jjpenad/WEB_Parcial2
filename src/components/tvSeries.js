@@ -6,27 +6,32 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import axios from "axios";
 import * as d3 from "d3";
+import { FormattedDate, FormattedNumber, FormattedMessage } from "react-intl";
 
 function TVSeries(props) {
   const [series, setSeries] = useState([]);
   const [selected, setSelected] = useState();
   const canvas = useRef();
+
   const seriesSpanish =
     "https://gist.githubusercontent.com/josejbocanegra/c55d86de9e0dae79e3308d95e78f997f/raw/a467415350e87c13faf9c8e843ea2fd20df056f3/series-es.json";
-  /*
-    const seriesEnglish =
+
+  const seriesEnglish =
     "https://gist.githubusercontent.com/josejbocanegra/5dc69cb7feb7945ef58b9c3d84be2635/raw/e2d16f7440d51cae06a9daf37b0b66818dd1fe31/series-en.json";
-*/
 
   const selectItem = (index) => {
     setSelected(series[index]);
   };
 
+  const language = window.navigator.language || navigator.browserLanguage;
+  const lang = language.substring(0, 2);
+
   useEffect(() => {
-    axios.get(seriesSpanish).then((res) => {
+    let urlUse = lang === "es" ? seriesSpanish : seriesEnglish;
+    axios.get(urlUse).then((res) => {
       setSeries(res.data);
     });
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     const drawChart = () => {
@@ -132,11 +137,21 @@ function TVSeries(props) {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Name</th>
-                <th>Channel</th>
-                <th>Seasons</th>
-                <th>Episodes</th>
-                <th>Release Date</th>
+                <th>
+                  <FormattedMessage id='Name' />
+                </th>
+                <th>
+                  <FormattedMessage id='Channel' />{" "}
+                </th>
+                <th>
+                  <FormattedMessage id='Seasons' />{" "}
+                </th>
+                <th>
+                  <FormattedMessage id='Episodes' />{" "}
+                </th>
+                <th>
+                  <FormattedMessage id='ReleaseDate' />{" "}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -150,9 +165,27 @@ function TVSeries(props) {
                     <td>{serie.id}</td>
                     <td>{serie.name}</td>
                     <td>{serie.channel}</td>
-                    <td>{serie.seasons}</td>
-                    <td>{serie.episodes}</td>
-                    <td>{serie.release}</td>
+                    <td>
+                      <FormattedNumber value={serie.seasons} />
+                    </td>
+                    <td>
+                      <FormattedNumber value={serie.episodes} />
+                    </td>
+                    <td>
+                      <FormattedDate
+                        value={
+                          serie.release.split("/")[1] +
+                          "/" +
+                          serie.release.split("/")[0] +
+                          "/" +
+                          serie.release.split("/")[2]
+                        }
+                        year='numeric'
+                        month='long'
+                        day='numeric'
+                        weekday='long'
+                      />
+                    </td>
                   </tr>
                 );
               })}
