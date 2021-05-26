@@ -1,29 +1,128 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Table from "react-bootstrap/Table";
 import Card from "react-bootstrap/Card";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import axios from "axios";
+import * as d3 from "d3";
 
 function TVSeries(props) {
   const [series, setSeries] = useState([]);
   const [selected, setSelected] = useState();
+  const canvas = useRef();
   const seriesSpanish =
     "https://gist.githubusercontent.com/josejbocanegra/c55d86de9e0dae79e3308d95e78f997f/raw/a467415350e87c13faf9c8e843ea2fd20df056f3/series-es.json";
   /*
     const seriesEnglish =
     "https://gist.githubusercontent.com/josejbocanegra/5dc69cb7feb7945ef58b9c3d84be2635/raw/e2d16f7440d51cae06a9daf37b0b66818dd1fe31/series-en.json";
 */
+
+  const selectItem = (index) => {
+    setSelected(series[index]);
+  };
+
   useEffect(() => {
     axios.get(seriesSpanish).then((res) => {
       setSeries(res.data);
     });
   }, []);
 
-  const selectItem = (index) => {
-    setSelected(series[index]);
-  };
+  useEffect(() => {
+    const drawChart = () => {
+      const width = 500;
+      const height = 350;
+      const margin = { top: 40, left: 30, bottom: 40, right: 40 };
+      const iwidth = width - margin.left - margin.right;
+      const iheight = height - margin.top - margin.bottom;
+
+      const svg = d3
+        .select(canvas.current)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .style("border-color", "black")
+        .style("border-style", "solid")
+        .style("border-width", "1px");
+
+      let g = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      let yMin = Math.min.apply(
+        Math,
+        series.map(function (o) {
+          return o.seasons;
+        })
+      );
+      let yMax = Math.max.apply(
+        Math,
+        series.map(function (o) {
+          return o.seasons;
+        })
+      );
+      let xMin = Math.min.apply(
+        Math,
+        series.map(function (o) {
+          return o.episodes;
+        })
+      );
+      let xMax = Math.max.apply(
+        Math,
+        series.map(function (o) {
+          return o.episodes;
+        })
+      );
+
+      const y = d3
+        .scaleLinear()
+        .domain([yMin - 2, yMax])
+        .range([iheight, 0]);
+
+      g.append("g").call(d3.axisLeft(y));
+
+      const x = d3
+        .scaleLinear()
+        .domain([xMin - 5, xMax])
+        .range([0, iwidth]);
+
+      g.append("g")
+        .attr("transform", "translate(0," + iheight + ")")
+        .call(d3.axisBottom(x));
+
+      let circles = g.append("g").selectAll("dot").data(series).enter();
+      // Add dots
+      circles
+        .append("circle")
+        .attr("cx", function (d) {
+          return x(parseInt(d.episodes));
+        })
+        .attr("cy", function (d) {
+          return y(parseInt(d.seasons));
+        })
+        .attr("r", 10)
+        .style("fill", "#69b3a2")
+        .style("opacity", "0.7")
+        .attr("stroke", "black");
+
+      circles
+        .append("text")
+        .attr("class", "label")
+        .attr("y", function (d) {
+          return y(d.seasons);
+        })
+        .attr("x", function (d) {
+          return x(d.episodes);
+        })
+        .text(function (d) {
+          return d.name;
+        });
+    };
+
+    if (series.length > 0) {
+      drawChart();
+    }
+  }, [series]);
 
   return (
     <Container fluid>
@@ -74,6 +173,9 @@ function TVSeries(props) {
             </Card>
           </Col>
         )}
+        <Col className='d-flex justify-content-center'>
+          <div ref={canvas}></div>
+        </Col>
       </Row>
     </Container>
   );
