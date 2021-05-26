@@ -4,5 +4,6 @@
   "Seasons": "Seasons",
   "Episodes": "Episodes",
   "ReleaseDate": "Release Date",
-  "TVSeries": "T.V. Series"
+  "TVSeries": "T.V. Series",
+  "ImageLoadError": "Error while loading image"
 }

@@ -4,5 +4,6 @@
   "Seasons": "Temporadas",
   "Episodes": "Episodios",
   "ReleaseDate": "Fecha de Lanzamiento",
-  "TVSeries": "Series de TV"
+  "TVSeries": "Series de TV",
+  "ImageLoadError": "Error cargando la imagen"
 }

@@ -28,16 +28,29 @@ function TVSeries(props) {
 
   useEffect(() => {
     let urlUse = lang === "es" ? seriesSpanish : seriesEnglish;
-    axios.get(urlUse).then((res) => {
-      setSeries(res.data);
-    });
+
+    if (!navigator.onLine) {
+      if (localStorage.getItem("series") !== null) {
+        setSeries(JSON.parse(localStorage.getItem("series")));
+      }
+    } else {
+      axios
+        .get(urlUse)
+        .then((res) => {
+          localStorage.setItem("series", JSON.stringify(res.data));
+          setSeries(res.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
   }, [lang]);
 
   useEffect(() => {
     const drawChart = () => {
       const width = 500;
       const height = 350;
-      const margin = { top: 40, left: 30, bottom: 40, right: 40 };
+      const margin = { top: 40, left: 30, bottom: 40, right: 30 };
       const iwidth = width - margin.left - margin.right;
       const iheight = height - margin.top - margin.bottom;
 
@@ -88,7 +101,7 @@ function TVSeries(props) {
 
       const x = d3
         .scaleLinear()
-        .domain([xMin - 5, xMax])
+        .domain([xMin - 5, xMax + 100])
         .range([0, iwidth]);
 
       g.append("g")
@@ -105,19 +118,20 @@ function TVSeries(props) {
         .attr("cy", function (d) {
           return y(parseInt(d.seasons));
         })
-        .attr("r", 10)
-        .style("fill", "#69b3a2")
+        .attr("r", 6)
+        .style("fill", "#ffd105")
         .style("opacity", "0.7")
         .attr("stroke", "black");
 
       circles
         .append("text")
         .attr("class", "label")
+        .style("font-size", "12px")
         .attr("y", function (d) {
           return y(d.seasons);
         })
         .attr("x", function (d) {
-          return x(d.episodes);
+          return x(d.episodes + 10);
         })
         .text(function (d) {
           return d.name;
@@ -141,16 +155,16 @@ function TVSeries(props) {
                   <FormattedMessage id='Name' />
                 </th>
                 <th>
-                  <FormattedMessage id='Channel' />{" "}
+                  <FormattedMessage id='Channel' />
                 </th>
                 <th>
-                  <FormattedMessage id='Seasons' />{" "}
+                  <FormattedMessage id='Seasons' />
                 </th>
                 <th>
-                  <FormattedMessage id='Episodes' />{" "}
+                  <FormattedMessage id='Episodes' />
                 </th>
                 <th>
-                  <FormattedMessage id='ReleaseDate' />{" "}
+                  <FormattedMessage id='ReleaseDate' />
                 </th>
               </tr>
             </thead>
@@ -181,10 +195,11 @@ function TVSeries(props) {
                           serie.release.split("/")[2]
                         }
                         year='numeric'
-                        month='long'
+                        month='numeric'
                         day='numeric'
-                        weekday='long'
                       />
+                      &nbsp;
+                      {serie.release}
                     </td>
                   </tr>
                 );
@@ -195,7 +210,14 @@ function TVSeries(props) {
         {selected && (
           <Col className='d-flex justify-content-center'>
             <Card style={{ width: "18rem" }}>
-              <Card.Img variant='top' src={selected.poster} alt='poster' />
+              {!navigator.onLine && (
+                <p>
+                  <FormattedMessage id='ImageLoadError' />
+                </p>
+              )}
+              {navigator.onLine && (
+                <Card.Img variant='top' src={selected.poster} alt='poster' />
+              )}
               <Card.Body>
                 <Card.Title>{selected.name}</Card.Title>
                 <Card.Text>{selected.description}</Card.Text>
